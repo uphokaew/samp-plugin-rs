@@ -11,15 +11,16 @@
 //  3. Reading parameters from Pawn scripts
 //  4. Returning values to Pawn scripts
 //
-//  To create your own plugin, modify this file or use it
-//  as a reference for your own crate.
+//  Build modes:
+//    - Legacy plugin:  cargo build --release
+//    - OMP component:  cargo build --release --features component
 // ---------------------------------------------------------
 
 use samp_sdk::exports;
 use samp_sdk::types::{Amx, AmxNativeInfo, Cell};
-use samp_sdk::{
-    define_plugin, error::AmxError, get_param_cell, get_string_from_amx, log, SampPlugin,
-};
+#[cfg(not(feature = "component"))]
+use samp_sdk::define_plugin;
+use samp_sdk::{error::AmxError, get_param_cell, get_string_from_amx, log, SampPlugin};
 
 // ---------------------------------------------------------
 //  Plugin Definition
@@ -43,8 +44,24 @@ impl SampPlugin for MyPlugin {
 
     fn amx_load(amx: *mut Amx) -> i32 {
         let natives = Self::natives();
-        let result = unsafe { exports::amx_register(amx, natives.as_ptr(), natives.len() as i32) };
-        result
+
+        // Filter out natives already registered on this AMX to avoid
+        // "already registered" warnings in open.mp when multiple
+        // scripts load (main + filterscripts).
+        let unregistered: Vec<_> = natives
+            .into_iter()
+            .filter(|n| {
+                let mut idx: i32 = 0;
+                let found = unsafe { exports::amx_find_native(amx, n.name, &mut idx) };
+                found != 0 // AMX_ERR_NONE = 0 means already found
+            })
+            .collect();
+
+        if unregistered.is_empty() {
+            return AmxError::None as i32;
+        }
+
+        unsafe { exports::amx_register(amx, unregistered.as_ptr(), unregistered.len() as i32) }
     }
 
     fn amx_unload(_amx: *mut Amx) -> i32 {
@@ -62,6 +79,26 @@ impl SampPlugin for MyPlugin {
                 n_my_string_function,
             ),
         ]
+    }
+}
+
+// ---------------------------------------------------------
+//  open.mp Component Implementation (feature-gated)
+// ---------------------------------------------------------
+
+#[cfg(feature = "component")]
+impl samp_sdk::OmpComponent for MyPlugin {
+    fn uid() -> u64 {
+        // Unique component ID — generate yours with a random u64
+        0xBA284FB180FCD75A
+    }
+
+    fn component_name() -> &'static str {
+        "MyPlugin"
+    }
+
+    fn component_version() -> samp_sdk::ComponentVersion {
+        samp_sdk::ComponentVersion::new(0, 1, 0)
     }
 }
 
@@ -106,7 +143,13 @@ unsafe extern "C" fn n_my_string_function(amx: *mut Amx, params: *mut Cell) -> C
 }
 
 // ---------------------------------------------------------
-//  Export Plugin
+//  Export Plugin (conditional on build mode)
 // ---------------------------------------------------------
 
+// Default: Legacy plugin mode (Supports/Load/Unload/AmxLoad/AmxUnload/ProcessTick)
+#[cfg(not(feature = "component"))]
 define_plugin!(MyPlugin);
+
+// Component mode: ComponentEntryPoint()
+#[cfg(feature = "component")]
+samp_sdk::define_component!(MyPlugin);

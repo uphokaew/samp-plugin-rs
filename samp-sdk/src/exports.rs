@@ -101,6 +101,27 @@ macro_rules! amx_thunk {
 // ---------------------------------------------------------
 
 amx_thunk! {
+    /// Align a 16-bit value.
+    pub unsafe fn amx_align16(v: *mut u16) -> *mut u16;
+    index = AMX_EXPORT_ALIGN16;
+    type Fn = unsafe extern "C" fn(*mut u16) -> *mut u16;
+}
+
+amx_thunk! {
+    /// Align a 32-bit value.
+    pub unsafe fn amx_align32(v: *mut u32) -> *mut u32;
+    index = AMX_EXPORT_ALIGN32;
+    type Fn = unsafe extern "C" fn(*mut u32) -> *mut u32;
+}
+
+amx_thunk! {
+    /// Align a 64-bit value.
+    pub unsafe fn amx_align64(v: *mut u64) -> *mut u64;
+    index = AMX_EXPORT_ALIGN64;
+    type Fn = unsafe extern "C" fn(*mut u64) -> *mut u64;
+}
+
+amx_thunk! {
     /// Allocate cells on the AMX heap.
     pub unsafe fn amx_allot(amx: *mut Amx, cells: i32, amx_addr: *mut Cell, phys_addr: *mut *mut Cell) -> i32;
     index = AMX_EXPORT_ALLOT;

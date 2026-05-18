@@ -9,12 +9,13 @@
 //  idiomatic Rust abstractions.
 //
 //  # Architecture
-//  - `types`   — FFI struct definitions (AMX, AMX_HEADER, etc.)
-//  - `consts`  — Protocol constants and flags
-//  - `error`   — AMX error code enumeration
-//  - `exports` — Function table dispatch (44 AMX functions)
-//  - `helpers` — Safe high-level wrappers
-//  - `plugin`  — SampPlugin trait + define_plugin! macro
+//  - `types`     — FFI struct definitions (AMX, AMX_HEADER, etc.)
+//  - `consts`    — Protocol constants and flags
+//  - `error`     — AMX error code enumeration
+//  - `exports`   — Function table dispatch (44 AMX functions)
+//  - `helpers`   — Safe high-level wrappers
+//  - `plugin`    — SampPlugin trait + define_plugin! macro
+//  - `component` — open.mp component mode (feature-gated)
 // ---------------------------------------------------------
 
 pub mod consts;
@@ -23,6 +24,9 @@ pub mod exports;
 pub mod helpers;
 pub mod plugin;
 pub mod types;
+
+#[cfg(feature = "component")]
+pub mod component;
 
 // ---------------------------------------------------------
 //  Convenient Re-exports
@@ -34,3 +38,7 @@ pub use exports::log;
 pub use helpers::*;
 pub use plugin::SampPlugin;
 pub use types::*;
+
+#[cfg(feature = "component")]
+pub use component::{ComponentVersion, OmpComponent};
+

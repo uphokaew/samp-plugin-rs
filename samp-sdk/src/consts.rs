@@ -52,6 +52,24 @@ pub const PLUGIN_DATA_CALLPUBLIC_FS: usize = 0x11;
 /// `int (*AmxCallPublicGameMode)(char *szFunctionName)`.
 pub const PLUGIN_DATA_CALLPUBLIC_GM: usize = 0x12;
 
+/// `CNetGame* GetNetGame()` — server network game instance.
+pub const PLUGIN_DATA_NETGAME: usize = 0xE1;
+
+/// `RakServerInterface* PluginGetRakServer()` — RakNet server.
+pub const PLUGIN_DATA_RAKSERVER: usize = 0xE2;
+
+/// `bool LoadFilterscriptFromMemory(char*, char*)` — filterscript loader.
+pub const PLUGIN_DATA_LOADFSCRIPT: usize = 0xE3;
+
+/// `CConsole* GetConsole()` — server console.
+pub const PLUGIN_DATA_CONSOLE: usize = 0xE4;
+
+/// `bool UnloadFilterScript(char*)` — filterscript unloader.
+pub const PLUGIN_DATA_UNLOADFSCRIPT: usize = 0xE5;
+
+/// Maximum size of the plugin data array.
+pub const MAX_PLUGIN_DATA: usize = 0x100;
+
 // ---------------------------------------------------------
 //  AMX Function Export Indices
 // ---------------------------------------------------------
@@ -205,5 +223,8 @@ pub const UNPACKEDMAX: Cell = ((1i32) << 24) - 1;
 
 /// Unlimited size sentinel (matching C's `(~1u >> 1)`).
 pub const UNLIMITED: u32 = !1u32 >> 1;
+
+/// Compact margin size for memory operations.
+pub const AMX_COMPACTMARGIN: i32 = 64;
 
 use crate::types::Cell;

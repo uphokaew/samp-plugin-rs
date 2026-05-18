@@ -7,3 +7,7 @@ license = "MIT"
 
 [lib]
 crate-type = ["lib"]
+
+[features]
+default = []
+component = []

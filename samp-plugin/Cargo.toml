@@ -10,3 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 samp-sdk = { path = "../samp-sdk" }
+
+[features]
+default = []
+component = ["samp-sdk/component"]
