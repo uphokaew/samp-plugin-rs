@@ -2,5 +2,5 @@
 resolver = "3"
 members = [
     "samp-sdk",
-    "samp-plugin",
+    "streamer",
 ]

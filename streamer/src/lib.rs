@@ -54,11 +54,11 @@ impl SampPlugin for MyPlugin {
     fn natives() -> Vec<AmxNativeInfo> {
         vec![
             AmxNativeInfo::new(
-                b"MyNativeFunction\0".as_ptr().cast(),
+                c"MyNativeFunction".as_ptr(),
                 n_my_native_function,
             ),
             AmxNativeInfo::new(
-                b"MyStringFunction\0".as_ptr().cast(),
+                c"MyStringFunction".as_ptr(),
                 n_my_string_function,
             ),
         ]
@@ -98,7 +98,7 @@ impl samp_sdk::OmpComponent for MyPlugin {
 /// MyNativeFunction(playerid);
 /// ```
 unsafe extern "C" fn n_my_native_function(_amx: *mut Amx, params: *mut Cell) -> Cell {
-    let player_id = unsafe { get_param_cell(params, 1) };
+    let player_id = unsafe { get_param_cell(params, 1).unwrap_or(0) };
     log(&format!("[MyPlugin] MyNativeFunction(playerid={player_id})"));
     1
 }
@@ -112,7 +112,7 @@ unsafe extern "C" fn n_my_native_function(_amx: *mut Amx, params: *mut Cell) -> 
 /// MyStringFunction("Hello from Pawn!");
 /// ```
 unsafe extern "C" fn n_my_string_function(amx: *mut Amx, params: *mut Cell) -> Cell {
-    let param = unsafe { get_param_cell(params, 1) };
+    let param = unsafe { get_param_cell(params, 1).unwrap_or(0) };
     match unsafe { get_string_from_amx(amx, param) } {
         Ok(text) => {
             log(&format!("[MyPlugin] MyStringFunction: \"{text}\""));

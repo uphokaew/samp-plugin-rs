@@ -182,11 +182,11 @@ impl AmxNativeInfo {
     /// when `number` is set to `-1` in `amx_Register`.
     #[allow(invalid_value)]
     pub const fn terminator() -> Self {
+        unsafe extern "C" fn dummy(_amx: *mut Amx, _params: *mut Cell) -> Cell { 0 }
+        
         Self {
             name: core::ptr::null(),
-            // Safety: this is a sentinel value only — the server checks
-            // for null and never actually calls this function pointer.
-            func: unsafe { core::mem::transmute(0usize) },
+            func: dummy,
         }
     }
 }

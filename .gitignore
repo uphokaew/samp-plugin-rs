@@ -3,6 +3,7 @@
 
 # Development scratch files
 /scratch
+/samp-streamer-plugin
 
 # OS files
 .DS_Store

@@ -45,18 +45,17 @@ pub unsafe fn get_string_from_amx(amx: *mut Amx, param: Cell) -> Result<String, 
     }
 
     // Allocate buffer and copy the string.
-    let size = (len + 1) as usize;
-    let mut buffer: Vec<u8> = vec![0u8; size];
+    let size = len as usize;
+    let mut buffer: Vec<u8> = vec![0u8; size + 1];
     let err = unsafe {
-        exports::amx_get_string(buffer.as_mut_ptr().cast(), ptr, 0, size)
+        exports::amx_get_string(buffer.as_mut_ptr().cast(), ptr, 0, size + 1)
     };
     if err != 0 {
         return Err(AmxError::from_raw(err));
     }
 
-    // Find the actual null terminator and truncate.
-    let actual_len = buffer.iter().position(|&b| b == 0).unwrap_or(buffer.len());
-    buffer.truncate(actual_len);
+    // amx_str_len returned exact length without null terminator
+    buffer.truncate(size);
 
     String::from_utf8(buffer).map_err(|_| AmxError::General)
 }
@@ -80,11 +79,15 @@ pub unsafe fn set_string_to_amx(
         return Err(AmxError::from_raw(err));
     }
 
-    let c_str = std::ffi::CString::new(value).map_err(|_| AmxError::Params)?;
-    let err = unsafe { exports::amx_set_string(dest, c_str.as_ptr(), 0, 0, max_len) };
-    if err != 0 {
-        return Err(AmxError::from_raw(err));
+    let bytes = value.as_bytes();
+    let len = core::cmp::min(bytes.len(), max_len - 1);
+    
+    // Default to unpacked string (1 character per cell) which is standard in Pawn.
+    let dest_slice = unsafe { core::slice::from_raw_parts_mut(dest, max_len) };
+    for i in 0..len {
+        dest_slice[i] = bytes[i] as Cell;
     }
+    dest_slice[len] = 0; // null terminator
 
     Ok(())
 }
@@ -110,8 +113,12 @@ pub unsafe fn get_params_count(params: *const Cell) -> i32 {
 ///
 /// # Safety
 /// `params` must be valid. `index` must be in range `1..=count`.
-pub unsafe fn get_param_cell(params: *const Cell, index: i32) -> Cell {
-    unsafe { *params.offset(index as isize) }
+pub unsafe fn get_param_cell(params: *const Cell, index: i32) -> Result<Cell, AmxError> {
+    let count = unsafe { get_params_count(params) };
+    if index < 1 || index > count {
+        return Err(AmxError::Params);
+    }
+    Ok(unsafe { *params.offset(index as isize) })
 }
 
 /// Read a float value from native function parameters.
@@ -122,9 +129,9 @@ pub unsafe fn get_param_cell(params: *const Cell, index: i32) -> Cell {
 ///
 /// # Safety
 /// `params` must be valid. `index` must be in range.
-pub unsafe fn get_param_float(params: *const Cell, index: i32) -> f32 {
-    let cell = unsafe { get_param_cell(params, index) };
-    f32::from_bits(cell as u32)
+pub unsafe fn get_param_float(params: *const Cell, index: i32) -> Result<f32, AmxError> {
+    let cell = unsafe { get_param_cell(params, index) }?;
+    Ok(f32::from_bits(cell as u32))
 }
 
 /// Convert a float to a cell value for returning to Pawn.
@@ -278,16 +285,14 @@ pub unsafe fn redirect_native(
         let name_ptr = unsafe { get_entry_name(hdr as *const AmxHeader, func) };
 
         let name = unsafe { std::ffi::CStr::from_ptr(name_ptr) };
-        if let Ok(name_str) = name.to_str() {
-            if name_str == from {
-                if let Some(store) = store {
-                    *store = unsafe { core::mem::transmute((*func).address as usize) };
-                }
-                // Write the new address
-                let func_mut = func as *mut AmxFuncStub;
-                unsafe { (*func_mut).address = to };
-                return;
+        if name.to_str() == Ok(from) {
+            if let Some(store) = store {
+                *store = unsafe { core::mem::transmute::<usize, AmxNative>((*func).address as usize) };
             }
+            // Write the new address
+            let func_mut = func as *mut AmxFuncStub;
+            unsafe { (*func_mut).address = to };
+            return;
         }
     }
 }

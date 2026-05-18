@@ -2,6 +2,7 @@
 //  SA-MP Plugin SDK for Rust
 //  exports.rs — AMX function table dispatch & logprintf
 // ---------------------------------------------------------
+#![allow(clippy::missing_safety_doc)]
 
 use core::ffi::{c_char, c_void};
 use std::sync::OnceLock;
@@ -62,7 +63,7 @@ pub fn log(msg: &str) {
     if let Some(logprintf) = LOGPRINTF.get() {
         if let Ok(c_msg) = std::ffi::CString::new(msg) {
             unsafe {
-                logprintf(b"%s\0".as_ptr().cast(), c_msg.as_ptr());
+                logprintf(c"%s".as_ptr(), c_msg.as_ptr());
             }
         }
     } else {
