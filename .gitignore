@@ -1,2 +1,15 @@
+# Build artifacts
 /target
+
+# Development scratch files
 /scratch
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -54,6 +54,10 @@ pub unsafe fn init_amx_functions(ptr: *const c_void) {
 // ---------------------------------------------------------
 
 /// Write a message to the SA-MP server console log.
+///
+/// In legacy mode, uses `logprintf` from the server.
+/// In component mode (or if logprintf is not available),
+/// falls back to `println!` which the open.mp console captures.
 pub fn log(msg: &str) {
     if let Some(logprintf) = LOGPRINTF.get() {
         if let Ok(c_msg) = std::ffi::CString::new(msg) {
@@ -61,6 +65,9 @@ pub fn log(msg: &str) {
                 logprintf(b"%s\0".as_ptr().cast(), c_msg.as_ptr());
             }
         }
+    } else {
+        // Fallback: write to stdout (open.mp captures this)
+        println!("{msg}");
     }
 }
 
