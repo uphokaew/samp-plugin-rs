@@ -1,0 +1,12 @@
+[package]
+name = "samp-plugin"
+version = "0.1.0"
+edition = "2024"
+description = "SA-MP server plugin template"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+samp-sdk = { path = "../samp-sdk" }

@@ -1,0 +1,9 @@
+[package]
+name = "samp-sdk"
+version = "0.1.0"
+edition = "2024"
+description = "SA-MP server plugin SDK for Rust"
+license = "MIT"
+
+[lib]
+crate-type = ["lib"]
