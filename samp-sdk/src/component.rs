@@ -363,12 +363,13 @@ macro_rules! define_component {
         ) {}
 
         // [13] IComponent::onFree(IComponent*)
+        //
+        // Called when ANOTHER component is being freed.
+        // Do NOT call unload() here — this fires for every component.
         unsafe extern "C" fn __vtable_on_free(
             _this: *mut $crate::component::RustComponent,
             _component: *mut core::ffi::c_void,
-        ) {
-            <$plugin as $crate::plugin::SampPlugin>::unload();
-        }
+        ) {}
 
         // [14] IComponent::provideConfiguration
         unsafe extern "C" fn __vtable_provide_config(
@@ -378,10 +379,11 @@ macro_rules! define_component {
             _defaults: bool,
         ) {}
 
-        // [15] IComponent::free
+        // [15] IComponent::free — our component is being destroyed
         unsafe extern "C" fn __vtable_free(
             this: *mut $crate::component::RustComponent,
         ) {
+            <$plugin as $crate::plugin::SampPlugin>::unload();
             unsafe { drop(Box::from_raw(this)); }
         }
 
