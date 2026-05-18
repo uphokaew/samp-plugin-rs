@@ -44,24 +44,7 @@ impl SampPlugin for MyPlugin {
 
     fn amx_load(amx: *mut Amx) -> i32 {
         let natives = Self::natives();
-
-        // Filter out natives already registered on this AMX to avoid
-        // "already registered" warnings in open.mp when multiple
-        // scripts load (main + filterscripts).
-        let unregistered: Vec<_> = natives
-            .into_iter()
-            .filter(|n| {
-                let mut idx: i32 = 0;
-                let found = unsafe { exports::amx_find_native(amx, n.name, &mut idx) };
-                found != 0 // AMX_ERR_NONE = 0 means already found
-            })
-            .collect();
-
-        if unregistered.is_empty() {
-            return AmxError::None as i32;
-        }
-
-        unsafe { exports::amx_register(amx, unregistered.as_ptr(), unregistered.len() as i32) }
+        unsafe { exports::amx_register(amx, natives.as_ptr(), natives.len() as i32) }
     }
 
     fn amx_unload(_amx: *mut Amx) -> i32 {
